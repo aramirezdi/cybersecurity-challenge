@@ -102,9 +102,38 @@
     .zs .face-front{background:linear-gradient(135deg,#060818,var(--bg2));}
     .za .face-front{background:linear-gradient(135deg,#160700,var(--bg2));}
 
-    /* card back SVG area */
-    .back-svg { width:92%; height:auto; margin-bottom:0; }
+    /* card back design */
+    .back-svg { display:none; }
     .back-label { display:none; }
+    .card-back-wrap {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:.6rem; width:100%; height:100%;
+    }
+    .cb-grid {
+      position:absolute; inset:0; border-radius:12px; overflow:hidden; pointer-events:none;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 24px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 1px, transparent 1px 24px);
+    }
+    .zp .cb-grid { background-image:
+      repeating-linear-gradient(0deg,rgba(255,71,87,.06) 0 1px,transparent 1px 24px),
+      repeating-linear-gradient(90deg,rgba(255,71,87,.06) 0 1px,transparent 1px 24px); }
+    .zs .cb-grid { background-image:
+      repeating-linear-gradient(0deg,rgba(65,105,225,.06) 0 1px,transparent 1px 24px),
+      repeating-linear-gradient(90deg,rgba(65,105,225,.06) 0 1px,transparent 1px 24px); }
+    .za .cb-grid { background-image:
+      repeating-linear-gradient(0deg,rgba(255,107,53,.06) 0 1px,transparent 1px 24px),
+      repeating-linear-gradient(90deg,rgba(255,107,53,.06) 0 1px,transparent 1px 24px); }
+    .cb-icon { font-size:4rem; line-height:1; position:relative; z-index:1; }
+    .cb-cat  { font-family:'Orbitron',monospace; font-size:.62rem; font-weight:700;
+               letter-spacing:.18em; text-transform:uppercase; position:relative; z-index:1; opacity:.9; }
+    .cb-dots { display:flex; gap:.35rem; position:relative; z-index:1; margin-top:.2rem; }
+    .cb-dots span { width:5px; height:5px; border-radius:50%; opacity:.4; }
+    .cb-secret { font-family:'Orbitron',monospace; font-size:.55rem; letter-spacing:.2em;
+                 opacity:.3; position:relative; z-index:1; }
+    .zp .cb-cat,.zp .cb-dots span { color:var(--red); background:var(--red); }
+    .zs .cb-cat,.zs .cb-dots span { color:var(--blue); background:var(--blue); }
+    .za .cb-cat,.za .cb-dots span { color:var(--orange); background:var(--orange); }
 
     /* card front */
     .front-icon { font-size:2rem; margin-bottom:.55rem; }
@@ -246,36 +275,13 @@
       <div class="card-wrap glow" id="cw1">
         <div class="card-inner" id="ci1">
           <div class="face face-back">
-            <svg class="back-svg" viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- circuit corners -->
-              <path d="M8 40 H28 V18 H52" stroke="rgba(255,71,87,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="18" r="3" fill="rgba(255,71,87,.35)"/>
-              <path d="M152 40 H132 V18 H108" stroke="rgba(255,71,87,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="18" r="3" fill="rgba(255,71,87,.35)"/>
-              <path d="M8 180 H28 V202 H52" stroke="rgba(255,71,87,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="202" r="3" fill="rgba(255,71,87,.35)"/>
-              <path d="M152 180 H132 V202 H108" stroke="rgba(255,71,87,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="202" r="3" fill="rgba(255,71,87,.35)"/>
-              <!-- side traces -->
-              <path d="M0 95 H14 V78 H24" stroke="rgba(255,71,87,.18)" stroke-width="1" fill="none"/>
-              <path d="M160 95 H146 V78 H136" stroke="rgba(255,71,87,.18)" stroke-width="1" fill="none"/>
-              <!-- person left -->
-              <circle cx="52" cy="68" r="18" stroke="#ff4757" stroke-width="2.2" fill="rgba(255,71,87,.08)"/>
-              <path d="M22 108 C22 88 82 88 82 108" stroke="#ff4757" stroke-width="2.2" fill="rgba(255,71,87,.05)"/>
-              <!-- person right (threat silhouette, dashed) -->
-              <circle cx="108" cy="68" r="18" stroke="#ff4757" stroke-width="2" stroke-dasharray="5 3" fill="rgba(255,71,87,.04)" opacity=".65"/>
-              <path d="M78 108 C78 88 138 88 138 108" stroke="#ff4757" stroke-width="2" stroke-dasharray="5 3" fill="none" opacity=".65"/>
-              <!-- broken link -->
-              <line x1="70" y1="74" x2="80" y2="74" stroke="#ff4757" stroke-width="2" stroke-linecap="round"/>
-              <line x1="86" y1="74" x2="95" y2="74" stroke="#ff4757" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
-              <!-- warning triangle -->
-              <path d="M80 118 L60 154 L100 154 Z" stroke="#ff4757" stroke-width="2.2" fill="rgba(255,71,87,.12)" stroke-linejoin="round"/>
-              <line x1="80" y1="128" x2="80" y2="142" stroke="#ff4757" stroke-width="2.5" stroke-linecap="round"/>
-              <circle cx="80" cy="149" r="2.8" fill="#ff4757"/>
-              <!-- label -->
-              <text x="80" y="178" text-anchor="middle" fill="rgba(255,71,87,.85)" font-family="monospace" font-size="9" font-weight="bold" letter-spacing="2">PROBLEMA SOCIAL</text>
-              <text x="80" y="210" text-anchor="middle" fill="rgba(255,71,87,.3)" font-family="monospace" font-size="7" letter-spacing="3">CARTA SECRETA</text>
-            </svg>
+            <div class="cb-grid"></div>
+            <div class="card-back-wrap">
+              <div class="cb-icon">&#128101;</div>
+              <div class="cb-cat">Problema Social</div>
+              <div class="cb-dots"><span></span><span></span><span></span></div>
+              <div class="cb-secret">CARTA SECRETA</div>
+            </div>
           </div>
           <div class="face face-front">
             <div class="front-icon" id="fi1">&#9888;&#65039;</div>
@@ -295,47 +301,13 @@
       <div class="card-wrap" id="cw2">
         <div class="card-inner" id="ci2">
           <div class="face face-back">
-            <svg class="back-svg" viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- circuit corners -->
-              <path d="M8 40 H28 V18 H52" stroke="rgba(65,105,225,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="18" r="3" fill="rgba(65,105,225,.35)"/>
-              <path d="M152 40 H132 V18 H108" stroke="rgba(65,105,225,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="18" r="3" fill="rgba(65,105,225,.35)"/>
-              <path d="M8 180 H28 V202 H52" stroke="rgba(65,105,225,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="202" r="3" fill="rgba(65,105,225,.35)"/>
-              <path d="M152 180 H132 V202 H108" stroke="rgba(65,105,225,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="202" r="3" fill="rgba(65,105,225,.35)"/>
-              <!-- network nodes -->
-              <circle cx="36"  cy="38" r="7" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.2)"/>
-              <circle cx="80"  cy="26" r="7" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.2)"/>
-              <circle cx="124" cy="38" r="7" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.2)"/>
-              <!-- node connections -->
-              <line x1="43" y1="38" x2="73" y2="28" stroke="#4169e1" stroke-width="1.5" stroke-dasharray="4 3" opacity=".7"/>
-              <line x1="87" y1="28" x2="117" y2="38" stroke="#4169e1" stroke-width="1.5" stroke-dasharray="4 3" opacity=".7"/>
-              <!-- node to building lines -->
-              <line x1="36" y1="45" x2="36" y2="96" stroke="#4169e1" stroke-width="1.4" stroke-dasharray="3 3" opacity=".5"/>
-              <line x1="80" y1="33" x2="80" y2="82" stroke="#4169e1" stroke-width="1.4" stroke-dasharray="3 3" opacity=".5"/>
-              <line x1="124" y1="45" x2="124" y2="90" stroke="#4169e1" stroke-width="1.4" stroke-dasharray="3 3" opacity=".5"/>
-              <!-- city buildings -->
-              <rect x="12"  y="116" width="22" height="50" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.08)" rx="1"/>
-              <rect x="40"  y="96"  width="26" height="70" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.08)" rx="1"/>
-              <rect x="72"  y="82"  width="16" height="84" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.1)"  rx="1"/>
-              <rect x="94"  y="90"  width="26" height="76" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.08)" rx="1"/>
-              <rect x="126" y="110" width="22" height="56" stroke="#4169e1" stroke-width="2" fill="rgba(65,105,225,.08)" rx="1"/>
-              <!-- windows -->
-              <rect x="18" y="122" width="4" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <rect x="26" y="122" width="4" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <rect x="46" y="104" width="4" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <rect x="56" y="104" width="4" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <rect x="75" y="92"  width="4" height="4" fill="rgba(65,105,225,.4)"  rx=".5"/>
-              <rect x="100" y="98" width="5" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <rect x="110" y="98" width="5" height="4" fill="rgba(65,105,225,.35)" rx=".5"/>
-              <!-- ground -->
-              <line x1="8" y1="166" x2="152" y2="166" stroke="rgba(65,105,225,.3)" stroke-width="1.5"/>
-              <!-- label -->
-              <text x="80" y="185" text-anchor="middle" fill="rgba(65,105,225,.85)" font-family="monospace" font-size="8.5" font-weight="bold" letter-spacing="1.5">SECTOR ECONÓMICO</text>
-              <text x="80" y="210" text-anchor="middle" fill="rgba(65,105,225,.3)" font-family="monospace" font-size="7" letter-spacing="3">CARTA SECRETA</text>
-            </svg>
+            <div class="cb-grid"></div>
+            <div class="card-back-wrap">
+              <div class="cb-icon">&#127970;</div>
+              <div class="cb-cat">Sector Econ&oacute;mico</div>
+              <div class="cb-dots"><span></span><span></span><span></span></div>
+              <div class="cb-secret">CARTA SECRETA</div>
+            </div>
           </div>
           <div class="face face-front">
             <div class="front-icon" id="fi2">&#127970;</div>
@@ -355,44 +327,13 @@
       <div class="card-wrap" id="cw3">
         <div class="card-inner" id="ci3">
           <div class="face face-back">
-            <svg class="back-svg" viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- circuit corners -->
-              <path d="M8 40 H28 V18 H52" stroke="rgba(255,107,53,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="18" r="3" fill="rgba(255,107,53,.35)"/>
-              <path d="M152 40 H132 V18 H108" stroke="rgba(255,107,53,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="18" r="3" fill="rgba(255,107,53,.35)"/>
-              <path d="M8 180 H28 V202 H52" stroke="rgba(255,107,53,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="54" cy="202" r="3" fill="rgba(255,107,53,.35)"/>
-              <path d="M152 180 H132 V202 H108" stroke="rgba(255,107,53,.25)" stroke-width="1.4" fill="none"/>
-              <circle cx="106" cy="202" r="3" fill="rgba(255,107,53,.35)"/>
-              <!-- skull shape -->
-              <path d="M80 28 C50 28 34 50 34 70 C34 88 46 100 50 108 L110 108 C114 100 126 88 126 70 C126 50 110 28 80 28 Z" stroke="#ff6b35" stroke-width="2.5" fill="rgba(255,107,53,.07)"/>
-              <!-- eye sockets -->
-              <ellipse cx="62" cy="72" rx="13" ry="14" stroke="#ff6b35" stroke-width="2.2" fill="rgba(255,107,53,.2)"/>
-              <ellipse cx="98" cy="72" rx="13" ry="14" stroke="#ff6b35" stroke-width="2.2" fill="rgba(255,107,53,.2)"/>
-              <!-- pupils (circuit dots) -->
-              <circle cx="62" cy="72" r="4" fill="rgba(255,107,53,.5)"/>
-              <circle cx="98" cy="72" r="4" fill="rgba(255,107,53,.5)"/>
-              <!-- jaw -->
-              <path d="M50 108 L50 124 Q50 132 58 132 L102 132 Q110 132 110 124 L110 108" stroke="#ff6b35" stroke-width="2.2" fill="rgba(255,107,53,.06)"/>
-              <line x1="66"  y1="108" x2="66"  y2="132" stroke="#ff6b35" stroke-width="1.8" opacity=".8"/>
-              <line x1="80"  y1="108" x2="80"  y2="132" stroke="#ff6b35" stroke-width="1.8" opacity=".8"/>
-              <line x1="94"  y1="108" x2="94"  y2="132" stroke="#ff6b35" stroke-width="1.8" opacity=".8"/>
-              <!-- circuit lines from skull sides -->
-              <line x1="6"  y1="70" x2="34" y2="70" stroke="#ff6b35" stroke-width="2" opacity=".8"/>
-              <circle cx="4"  cy="70" r="4" stroke="#ff6b35" stroke-width="2" fill="rgba(255,107,53,.25)"/>
-              <line x1="154" y1="70" x2="126" y2="70" stroke="#ff6b35" stroke-width="2" opacity=".8"/>
-              <circle cx="156" cy="70" r="4" stroke="#ff6b35" stroke-width="2" fill="rgba(255,107,53,.25)"/>
-              <!-- circuit lines from jaw -->
-              <line x1="80" y1="132" x2="80" y2="145" stroke="#ff6b35" stroke-width="1.5" opacity=".6"/>
-              <line x1="60" y1="145" x2="100" y2="145" stroke="#ff6b35" stroke-width="1.5" opacity=".4"/>
-              <!-- binary code -->
-              <text x="80" y="158" text-anchor="middle" fill="rgba(255,107,53,.4)" font-family="monospace" font-size="7.5">01001000 01000001</text>
-              <text x="80" y="168" text-anchor="middle" fill="rgba(255,107,53,.25)" font-family="monospace" font-size="7.5">01000011 01001011</text>
-              <!-- label -->
-              <text x="80" y="185" text-anchor="middle" fill="rgba(255,107,53,.85)" font-family="monospace" font-size="9.5" font-weight="bold" letter-spacing="2.5">AMENAZA CYBER</text>
-              <text x="80" y="210" text-anchor="middle" fill="rgba(255,107,53,.3)" font-family="monospace" font-size="7" letter-spacing="3">CARTA SECRETA</text>
-            </svg>
+            <div class="cb-grid"></div>
+            <div class="card-back-wrap">
+              <div class="cb-icon">&#9760;&#65039;</div>
+              <div class="cb-cat">Amenaza Cyber</div>
+              <div class="cb-dots"><span></span><span></span><span></span></div>
+              <div class="cb-secret">CARTA SECRETA</div>
+            </div>
           </div>
           <div class="face face-front">
             <div class="front-icon" id="fi3">&#128128;</div>
