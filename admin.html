@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel de Jurados – Cybersecurity Challenge</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --bg:#060b18; --bg2:#0d1525; --bg3:#121d30;
+      --cyan:#00d4ff; --red:#ff4757; --blue:#4169e1; --orange:#ff6b35;
+      --green:#00e676; --gold:#ffd700; --muted:#8899cc; --text:#dde8ff;
+    }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Rajdhani',sans-serif; min-height:100vh; }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:linear-gradient(rgba(0,212,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.04) 1px,transparent 1px);
+      background-size:44px 44px;
+    }
+
+    /* ── LAYOUT ── */
+    .wrap { max-width:1100px; margin:0 auto; padding:0 1.5rem 4rem; position:relative; z-index:1; }
+
+    /* ── HEADER ── */
+    .top-header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1.25rem 0; border-bottom:1px solid rgba(0,212,255,.15); margin-bottom:2rem;
+    }
+    .top-header .left { display:flex; align-items:center; gap:1rem; }
+    .top-header h1 { font-family:'Orbitron',monospace; font-size:clamp(.85rem,2vw,1.15rem); color:#fff; }
+    .top-header .sub { color:var(--muted); font-size:.8rem; }
+    .judge-badge {
+      display:inline-flex; align-items:center; gap:.4rem;
+      background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.25);
+      border-radius:99px; padding:.32rem 1rem; font-size:.82rem; color:var(--cyan);
+    }
+
+    /* ── SCREENS ── */
+    .screen { display:none; }
+    .screen.active { display:block; }
+
+    /* ── AUTH ── */
+    #s-auth { min-height:90vh; display:none; align-items:center; justify-content:center; }
+    #s-auth.active { display:flex; }
+    .auth-box {
+      background:var(--bg2); border:1px solid rgba(0,212,255,.2); border-radius:14px;
+      padding:2.5rem 3rem; width:100%; max-width:420px; text-align:center;
+    }
+    .auth-box .logo { margin-bottom:1.25rem; }
+    .auth-box h2 { font-family:'Orbitron',monospace; font-size:1rem; color:var(--cyan); margin-bottom:.4rem; }
+    .auth-box p  { color:var(--muted); font-size:.85rem; margin-bottom:1.75rem; }
+    .auth-box input {
+      width:100%; background:rgba(255,255,255,.04); border:1px solid rgba(0,212,255,.2);
+      border-radius:7px; padding:.75rem 1rem; color:var(--text);
+      font-family:'Rajdhani',sans-serif; font-size:1rem; outline:none; text-align:center;
+      letter-spacing:.2em; margin-bottom:1rem; transition:border-color .25s;
+    }
+    .auth-box input:focus { border-color:var(--cyan); }
+    .auth-error { color:var(--red); font-size:.82rem; margin-top:.5rem; min-height:1.2rem; }
+
+    /* ── JUDGE SELECT ── */
+    #s-judge { min-height:70vh; display:none; align-items:center; justify-content:center; }
+    #s-judge.active { display:flex; }
+    .judge-select { text-align:center; max-width:500px; }
+    .judge-select h2 { font-family:'Orbitron',monospace; font-size:1.1rem; color:var(--cyan); margin-bottom:.5rem; }
+    .judge-select p  { color:var(--muted); font-size:.9rem; margin-bottom:2rem; }
+    .judge-cards { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .judge-card {
+      background:var(--bg2); border:2px solid rgba(0,212,255,.2); border-radius:12px;
+      padding:2rem 1.5rem; cursor:pointer; transition:all .25s; text-align:center;
+    }
+    .judge-card:hover { border-color:var(--cyan); box-shadow:0 0 24px rgba(0,212,255,.15); transform:translateY(-2px); }
+    .judge-card .jicon { font-size:2.5rem; margin-bottom:.75rem; }
+    .judge-card .jnum  { font-family:'Orbitron',monospace; font-size:1rem; color:#fff; }
+    .judge-card .jlabel{ color:var(--muted); font-size:.8rem; margin-top:.25rem; }
+
+    /* ── TABS ── */
+    #s-main { }
+    #s-main.active { display:block; }
+    .tabs { display:flex; gap:.5rem; margin-bottom:1.75rem; }
+    .tab {
+      padding:.55rem 1.5rem; border:1px solid rgba(0,212,255,.2); border-radius:7px;
+      font-family:'Orbitron',monospace; font-size:.72rem; font-weight:700;
+      letter-spacing:.08em; cursor:pointer; color:var(--muted); background:transparent; transition:all .25s;
+    }
+    .tab.active { background:var(--cyan); color:#000; border-color:var(--cyan); }
+    .tab:hover:not(.active) { border-color:var(--cyan); color:var(--cyan); }
+    .tab-content { display:none; } .tab-content.active { display:block; }
+
+    /* ── SUBMISSIONS ── */
+    .sub-grid { display:grid; gap:1.25rem; }
+    .sub-card {
+      background:var(--bg2); border:1px solid rgba(255,255,255,.08);
+      border-radius:12px; overflow:hidden;
+    }
+    .sub-card-head {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:1rem 1.25rem; cursor:pointer; border-bottom:1px solid rgba(255,255,255,.05);
+      transition:background .2s;
+    }
+    .sub-card-head:hover { background:rgba(255,255,255,.02); }
+    .sub-head-left { display:flex; align-items:center; gap:.75rem; }
+    .rank-badge {
+      width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-family:'Orbitron',monospace; font-size:.75rem; font-weight:700; flex-shrink:0;
+    }
+    .rank-1 { background:var(--gold); color:#000; }
+    .rank-2 { background:#c0c0c0; color:#000; }
+    .rank-3 { background:#cd7f32; color:#000; }
+    .rank-n { background:rgba(255,255,255,.1); color:var(--muted); }
+    .team-name { font-family:'Orbitron',monospace; font-size:.9rem; color:#fff; }
+    .team-sub  { color:var(--muted); font-size:.78rem; margin-top:.15rem; }
+    .sub-head-right { display:flex; align-items:center; gap:1rem; }
+    .score-pill {
+      font-family:'Orbitron',monospace; font-size:.82rem; font-weight:700;
+      padding:.25rem .75rem; border-radius:99px;
+    }
+    .score-j1 { background:rgba(65,105,225,.2); color:#8099ff; border:1px solid rgba(65,105,225,.3); }
+    .score-j2 { background:rgba(255,107,53,.2); color:#ff9a75; border:1px solid rgba(255,107,53,.3); }
+    .score-final{ background:rgba(0,212,255,.15); color:var(--cyan); border:1px solid rgba(0,212,255,.3); }
+    .chevron { color:var(--muted); font-size:1.1rem; transition:transform .25s; }
+    .chevron.open { transform:rotate(180deg); }
+
+    .sub-card-body { display:none; padding:1.25rem; }
+    .sub-card-body.open { display:block; }
+
+    .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.75rem; margin-bottom:1.25rem; }
+    .detail-item { background:var(--bg3); border-radius:8px; padding:.75rem; }
+    .detail-item .dl { font-size:.65rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:.25rem; }
+    .detail-item .dv { font-size:.9rem; color:#fff; font-weight:600; line-height:1.4; }
+    .detail-item.dp .dv{color:#ff8080;} .detail-item.ds .dv{color:#8099ff;} .detail-item.da .dv{color:#ff9a75;}
+
+    .answer-block { margin-bottom:.85rem; }
+    .answer-block .al { font-size:.7rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:.3rem; }
+    .answer-block .av { background:var(--bg3); border-radius:6px; padding:.65rem .85rem; font-size:.9rem; color:var(--text); line-height:1.55; }
+
+    /* Scoring form */
+    .score-section {
+      border-top:1px solid rgba(255,255,255,.07); padding-top:1.25rem; margin-top:1.25rem;
+    }
+    .score-section h4 { font-family:'Orbitron',monospace; font-size:.78rem; margin-bottom:1rem; }
+    .score-section h4.j1 { color:#8099ff; } .score-section h4.j2 { color:#ff9a75; }
+    .criteria-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.75rem; margin-bottom:1rem; }
+    .criterion { }
+    .criterion label { font-size:.75rem; color:var(--muted); display:block; margin-bottom:.35rem; }
+    .score-row { display:flex; align-items:center; gap:.5rem; }
+    .score-input {
+      width:64px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.15);
+      border-radius:6px; padding:.45rem .5rem; color:#fff;
+      font-family:'Orbitron',monospace; font-size:.9rem; text-align:center; outline:none;
+      transition:border-color .25s;
+    }
+    .score-input:focus { border-color:var(--cyan); }
+    .score-max { color:var(--muted); font-size:.8rem; }
+    .score-total-row { display:flex; align-items:center; gap:.75rem; margin-top:.25rem; }
+    .score-total-label { color:var(--muted); font-size:.82rem; }
+    .score-total-val { font-family:'Orbitron',monospace; font-size:1.1rem; color:var(--cyan); font-weight:700; }
+    .already-scored { color:var(--green); font-size:.85rem; padding:.5rem 0; }
+
+    /* ── LEADERBOARD ── */
+    .leaderboard { }
+    .lb-row {
+      display:flex; align-items:center; gap:1rem;
+      background:var(--bg2); border:1px solid rgba(255,255,255,.07);
+      border-radius:10px; padding:1rem 1.25rem; margin-bottom:.75rem;
+      transition:all .25s;
+    }
+    .lb-row:hover { border-color:rgba(0,212,255,.2); }
+    .lb-pos { font-family:'Orbitron',monospace; font-size:1.2rem; font-weight:900; min-width:40px; text-align:center; }
+    .lb-pos.p1 { color:var(--gold); } .lb-pos.p2 { color:#c0c0c0; } .lb-pos.p3 { color:#cd7f32; }
+    .lb-info { flex:1; }
+    .lb-team { font-family:'Orbitron',monospace; font-size:.95rem; color:#fff; }
+    .lb-detail{ color:var(--muted); font-size:.78rem; margin-top:.15rem; }
+    .lb-score { font-family:'Orbitron',monospace; font-size:1.4rem; font-weight:700; color:var(--cyan); }
+    .lb-sub   { font-size:.7rem; color:var(--muted); text-align:right; }
+    .no-data  { text-align:center; color:var(--muted); padding:3rem; font-size:.9rem; }
+    .refresh-btn { margin-bottom:1.25rem; }
+
+    /* buttons */
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:.4rem; padding:.75rem 1.75rem; border:none; border-radius:7px; cursor:pointer; font-family:'Orbitron',monospace; font-size:.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; transition:all .25s; }
+    .btn-full { width:100%; }
+    .btn-cyan { background:var(--cyan); color:#000; }
+    .btn-cyan:hover { background:#fff; box-shadow:0 0 22px rgba(0,212,255,.4); }
+    .btn-outline { background:transparent; color:var(--cyan); border:1px solid var(--cyan); }
+    .btn-outline:hover { background:rgba(0,212,255,.1); }
+    .btn-sm { padding:.45rem 1rem; font-size:.68rem; }
+    .btn-green { background:var(--green); color:#000; }
+    .btn-green:hover { filter:brightness(1.1); }
+    .btn:disabled { opacity:.35; cursor:not-allowed; }
+
+    /* toast */
+    .toast { position:fixed; bottom:1.5rem; right:1.5rem; background:var(--bg2); border:1px solid var(--green); border-radius:8px; padding:.75rem 1.25rem; color:var(--green); font-size:.85rem; font-weight:600; z-index:100; opacity:0; transform:translateY(10px); transition:all .3s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast.err  { border-color:var(--red); color:var(--red); }
+
+    @media(max-width:600px){
+      .judge-cards{grid-template-columns:1fr;}
+      .auth-box{padding:2rem 1.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Auth screen (full screen) -->
+<div id="s-auth" class="screen active">
+  <div class="auth-box">
+    <div class="logo">
+      <svg viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:26px">
+        <text x="0" y="26" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900" fill="#1a3a6b" letter-spacing="-1">merlin</text>
+      </svg>
+    </div>
+    <h2>&#128737; Panel de Jurados</h2>
+    <p>HackaCYBER &middot; SED Bogot&aacute;<br>Cybersecurity Challenge</p>
+    <input type="password" id="pwd-input" placeholder="Contrase&ntilde;a" onkeydown="if(event.key==='Enter')checkAuth()">
+    <button class="btn btn-cyan btn-full" onclick="checkAuth()">&#9654; Entrar</button>
+    <div class="auth-error" id="auth-err"></div>
+  </div>
+</div>
+
+<!-- Judge selection -->
+<div id="s-judge" class="screen">
+  <div class="judge-select">
+    <h2>&#127942; Selecciona tu rol</h2>
+    <p>Cada jurado califica de forma independiente.<br>Los puntajes se promedian para el resultado final.</p>
+    <div class="judge-cards">
+      <div class="judge-card" onclick="selectJudge(1)">
+        <div class="jicon">&#129333;</div>
+        <div class="jnum">Jurado 1</div>
+        <div class="jlabel">Primer evaluador</div>
+      </div>
+      <div class="judge-card" onclick="selectJudge(2)">
+        <div class="jicon">&#129333;</div>
+        <div class="jnum">Jurado 2</div>
+        <div class="jlabel">Segundo evaluador</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main panel -->
+<div id="s-main" class="screen">
+  <div class="wrap">
+    <div class="top-header">
+      <div class="left">
+        <svg viewBox="0 0 110 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="height:20px;opacity:.75">
+          <text x="0" y="26" font-family="Arial Black,Arial,sans-serif" font-size="28" font-weight="900" fill="#4a7abf" letter-spacing="-1">merlin</text>
+        </svg>
+        <div>
+          <h1>Panel de Jurados &mdash; Cybersecurity Challenge</h1>
+          <div class="sub">HackaCYBER &middot; SED Bogot&aacute;</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <span class="judge-badge" id="judge-label">&#129333; Jurado ?</span>
+        <button class="btn btn-outline btn-sm" onclick="loadData()">&#8635; Actualizar</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('t-teams')">&#128101; Equipos</button>
+      <button class="tab"        onclick="showTab('t-leader')">&#127942; Clasificaci&oacute;n</button>
+    </div>
+
+    <!-- TAB: Equipos -->
+    <div id="t-teams" class="tab-content active">
+      <div id="teams-list" class="sub-grid">
+        <div class="no-data">Cargando equipos...</div>
+      </div>
+    </div>
+
+    <!-- TAB: Leaderboard -->
+    <div id="t-leader" class="tab-content">
+      <div id="leader-list" class="leaderboard">
+        <div class="no-data">Cargando clasificaci&oacute;n...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══ CONFIG ═══
+   Copia los mismos valores que en index.html
+*/
+const SUPABASE_URL      = 'TU_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY';
+const ADMIN_PASSWORD    = 'jurado2025'; // Cambia esta contraseña
+
+/* ═══ RUBRICA ═══ */
+const CRITERIA = [
+  { key:'creatividad',   label:'Creatividad e Innovaci\u00F3n', max:10 },
+  { key:'pertinencia',   label:'Pertinencia de la Soluci\u00F3n', max:10 },
+  { key:'impacto',       label:'Impacto Social', max:10 },
+  { key:'presentacion',  label:'Presentaci\u00F3n y Sustentaci\u00F3n', max:10 }
+];
+
+let db, judge = null, allData = [];
+
+if(SUPABASE_URL!=='TU_SUPABASE_URL'){
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  console.warn('Supabase no configurado');
+}
+
+const $id = id => document.getElementById(id);
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $id(id).classList.add('active');
+}
+
+function checkAuth(){
+  const val = $id('pwd-input').value;
+  if(val === ADMIN_PASSWORD){
+    $id('auth-err').textContent='';
+    showScreen('s-judge');
+  } else {
+    $id('auth-err').textContent='Contraseña incorrecta.';
+    $id('pwd-input').value='';
+    $id('pwd-input').focus();
+  }
+}
+$id('pwd-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkAuth(); });
+
+function selectJudge(n){
+  judge=n;
+  $id('judge-label').innerHTML='&#129333; Jurado '+n;
+  showScreen('s-main');
+  loadData();
+}
+
+function showTab(id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  $id(id).classList.add('active');
+  event.target.classList.add('active');
+  if(id==='t-leader') renderLeader();
+}
+
+async function loadData(){
+  if(!db){ $id('teams-list').innerHTML='<div class="no-data">Supabase no configurado.</div>'; return; }
+  $id('teams-list').innerHTML='<div class="no-data">&#8635; Cargando...</div>';
+  const { data, error } = await db.from('submissions').select('*').order('created_at',{ascending:true});
+  if(error){ $id('teams-list').innerHTML='<div class="no-data">Error: '+error.message+'</div>'; return; }
+  allData = data || [];
+  renderTeams();
+  if($id('t-leader').classList.contains('active')) renderLeader();
+}
+
+function calcScore(scoreObj){
+  if(!scoreObj) return null;
+  return CRITERIA.reduce((s,c)=>s+(Number(scoreObj[c.key])||0),0);
+}
+
+function finalScore(row){
+  const s1 = calcScore(row.score_j1);
+  const s2 = calcScore(row.score_j2);
+  if(s1!==null && s2!==null) return ((s1+s2)/2).toFixed(1);
+  if(s1!==null) return s1+' (J1)';
+  if(s2!==null) return s2+' (J2)';
+  return '—';
+}
+
+function renderTeams(){
+  if(!allData.length){ $id('teams-list').innerHTML='<div class="no-data">No hay equipos registrados a&uacute;n.</div>'; return; }
+  $id('teams-list').innerHTML = allData.map((row,idx)=>teamCard(row,idx)).join('');
+}
+
+function teamCard(row, idx){
+  const s1 = calcScore(row.score_j1);
+  const s2 = calcScore(row.score_j2);
+  const fs = finalScore(row);
+  const members = [row.member1,row.member2,row.member3,row.member4,row.member5].filter(Boolean);
+  const myScore = judge===1 ? row.score_j1 : row.score_j2;
+
+  const criteriaInputs = CRITERIA.map(c=>`
+    <div class="criterion">
+      <label>${c.label}</label>
+      <div class="score-row">
+        <input type="number" class="score-input" id="sc_${row.id}_${c.key}"
+          min="0" max="${c.max}" value="${myScore?myScore[c.key]:''}"
+          ${myScore?'disabled':''} oninput="updateTotal('${row.id}')">
+        <span class="score-max">/ ${c.max}</span>
+      </div>
+    </div>`).join('');
+
+  const scoreSection = myScore
+    ? `<div class="score-section">
+        <h4 class="${judge===1?'j1':'j2'}">&#129333; Tu puntuaci&oacute;n como Jurado ${judge}</h4>
+        <div class="already-scored">&#10003; Ya calificaste este equipo &mdash; Total: <strong>${calcScore(myScore)}/40</strong></div>
+        <div class="criteria-grid">${criteriaInputs}</div>
+      </div>`
+    : `<div class="score-section">
+        <h4 class="${judge===1?'j1':'j2'}">&#9998; Calificar como Jurado ${judge}</h4>
+        <div class="criteria-grid">${criteriaInputs}</div>
+        <div class="score-total-row">
+          <span class="score-total-label">Total:</span>
+          <span class="score-total-val" id="total_${row.id}">0</span>
+          <span class="score-total-label">/ 40</span>
+        </div>
+        <button class="btn btn-green btn-sm" style="margin-top:.75rem" onclick="saveScore('${row.id}')">
+          &#10003; Guardar Puntaje
+        </button>
+      </div>`;
+
+  return `
+  <div class="sub-card" id="card_${row.id}">
+    <div class="sub-card-head" onclick="toggleCard('${row.id}')">
+      <div class="sub-head-left">
+        <div class="rank-badge rank-n">${idx+1}</div>
+        <div>
+          <div class="team-name">${row.team_name}</div>
+          <div class="team-sub">Rep: ${row.rep_name}${members.length?' &middot; '+members.join(', '):''}</div>
+        </div>
+      </div>
+      <div class="sub-head-right">
+        ${s1!==null?`<span class="score-pill score-j1">J1: ${s1}/40</span>`:''}
+        ${s2!==null?`<span class="score-pill score-j2">J2: ${s2}/40</span>`:''}
+        <span class="score-pill score-final">&#127942; ${fs}</span>
+        <span class="chevron" id="chev_${row.id}">&#9660;</span>
+      </div>
+    </div>
+    <div class="sub-card-body" id="body_${row.id}">
+      <div class="detail-grid">
+        <div class="detail-item dp"><div class="dl">&#9888; Problema Social</div><div class="dv">${row.problema||'—'}</div></div>
+        <div class="detail-item ds"><div class="dl">&#127970; Sector Econ&oacute;mico</div><div class="dv">${row.sector||'—'}</div></div>
+        <div class="detail-item da"><div class="dl">&#128128; Amenaza Cyber</div><div class="dv">${row.amenaza||'—'}</div></div>
+        <div class="detail-item"><div class="dl">&#128640; Proyecto</div><div class="dv">${row.nombre_proyecto||'—'}</div></div>
+      </div>
+      <div class="answer-block"><div class="al">&#9889; C&oacute;mo ocurre el ataque</div><div class="av">${row.como_ataque||'—'}</div></div>
+      <div class="answer-block"><div class="al">&#127919; Por qu&eacute; afecta al sector</div><div class="av">${row.por_que||'—'}</div></div>
+      <div class="answer-block"><div class="al">&#128101; Impacto social</div><div class="av">${row.impacto_social||'—'}</div></div>
+      <div class="answer-block"><div class="al">&#128737; Soluci&oacute;n propuesta</div><div class="av">${row.solucion||'—'}</div></div>
+      <div class="answer-block"><div class="al">&#10024; Impacto esperado</div><div class="av">${row.impacto_esperado||'—'}</div></div>
+      ${scoreSection}
+    </div>
+  </div>`;
+}
+
+function toggleCard(id){
+  const body  = $id('body_'+id);
+  const chev  = $id('chev_'+id);
+  const open  = body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  chev.classList.toggle('open',!open);
+}
+
+function updateTotal(id){
+  const total = CRITERIA.reduce((s,c)=>{
+    const el = $id('sc_'+id+'_'+c.key);
+    return s + Math.min(c.max, Math.max(0, Number(el?.value)||0));
+  },0);
+  const tel = $id('total_'+id);
+  if(tel) tel.textContent = total;
+}
+
+async function saveScore(id){
+  if(!db){ showToast('Supabase no configurado','err'); return; }
+  const scoreObj = {};
+  let valid = true;
+  CRITERIA.forEach(c=>{
+    const el = $id('sc_'+id+'_'+c.key);
+    const v = Number(el?.value);
+    if(isNaN(v)||v<0||v>c.max){ valid=false; el.style.borderColor='var(--red)'; }
+    else { el.style.borderColor=''; scoreObj[c.key]=v; }
+  });
+  if(!valid){ showToast('Revisa los puntajes (0-10)','err'); return; }
+  scoreObj.total = CRITERIA.reduce((s,c)=>s+scoreObj[c.key],0);
+  scoreObj.timestamp = new Date().toISOString();
+
+  const col = judge===1 ? 'score_j1' : 'score_j2';
+  const { error } = await db.from('submissions').update({[col]:scoreObj}).eq('id',id);
+  if(error){ showToast('Error: '+error.message,'err'); return; }
+  showToast('&#10003; Puntaje guardado correctamente');
+  await loadData();
+}
+
+function renderLeader(){
+  if(!allData.length){ $id('leader-list').innerHTML='<div class="no-data">No hay equipos a&uacute;n.</div>'; return; }
+  const ranked = [...allData].map(r=>{
+    const s1=calcScore(r.score_j1), s2=calcScore(r.score_j2);
+    let avg = null;
+    if(s1!==null&&s2!==null) avg=(s1+s2)/2;
+    else if(s1!==null) avg=s1;
+    else if(s2!==null) avg=s2;
+    return {...r, avg};
+  }).sort((a,b)=>{
+    if(a.avg===null&&b.avg===null) return 0;
+    if(a.avg===null) return 1;
+    if(b.avg===null) return -1;
+    return b.avg-a.avg;
+  });
+
+  const posClass = n => n===1?'p1':n===2?'p2':n===3?'p3':'';
+  const medal    = n => n===1?'&#129351;':n===2?'&#129352;':n===3?'&#129353;':'#'+n;
+
+  $id('leader-list').innerHTML = ranked.map((r,i)=>{
+    const pos = i+1;
+    const s1=calcScore(r.score_j1), s2=calcScore(r.score_j2);
+    const members=[r.member1,r.member2,r.member3,r.member4,r.member5].filter(Boolean);
+    return `
+    <div class="lb-row">
+      <div class="lb-pos ${posClass(pos)}">${medal(pos)}</div>
+      <div class="lb-info">
+        <div class="lb-team">${r.team_name}</div>
+        <div class="lb-detail">
+          Rep: ${r.rep_name}${members.length?' &middot; '+members.join(', '):''}
+          <span style="margin-left:.5rem;opacity:.6">${r.nombre_proyecto||''}</span>
+        </div>
+        <div class="lb-detail" style="margin-top:.2rem">
+          ${s1!==null?`J1: ${s1}/40`:'J1: pendiente'}
+          &nbsp;&middot;&nbsp;
+          ${s2!==null?`J2: ${s2}/40`:'J2: pendiente'}
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="lb-score">${r.avg!==null?r.avg.toFixed(1):'—'}</div>
+        <div class="lb-sub">/ 40</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showToast(msg, type='ok'){
+  const t=$id('toast');
+  t.innerHTML=msg; t.className='toast'+(type==='err'?' err':'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
