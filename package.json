@@ -1,0 +1,12 @@
+{
+  "name": "cybersecurity-challenge",
+  "version": "1.0.0",
+  "description": "Cyber Defenders for Social Impact – HackaCYBER SED Bogotá",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
